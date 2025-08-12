@@ -36,5 +36,3 @@ build/
 # Ignore audio outputs
 *.wav
 
-*.safetensors
-*.bin
