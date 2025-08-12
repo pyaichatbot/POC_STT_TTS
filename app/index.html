@@ -1,0 +1,74 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Local TTS/STT PoC</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    textarea { width: 100%; height: 100px; }
+    .row { display: flex; gap: 1rem; align-items: center; }
+    audio { width: 100%; margin-top: .5rem; }
+    .card { border: 1px solid #ddd; padding: 1rem; border-radius: .5rem; margin-bottom: 1rem; }
+    button { padding: .6rem 1rem; cursor: pointer; }
+    input[type=file] { padding: .5rem; }
+  </style>
+</head>
+<body>
+  <h1>Local TTS/STT PoC</h1>
+  <div class="card">
+    <h2>TTS (Text → Speech)</h2>
+    <textarea id="ttsText">Welcome to our internal AI training session. This audio is generated locally.</textarea>
+    <div class="row">
+      <label>Voice <input id="voice" placeholder="female_1"></label>
+      <label>Speed <input id="speed" type="number" step="0.1" value="1.0"></label>
+      <button onclick="doTTS()">Synthesize</button>
+    </div>
+    <audio id="ttsAudio" controls></audio>
+  </div>
+
+  <div class="card">
+    <h2>STT (Speech → Text)</h2>
+    <form id="sttForm">
+      <input type="file" id="sttFile" accept="audio/*" required />
+      <button>Transcribe</button>
+    </form>
+    <pre id="sttOut"></pre>
+  </div>
+
+  <div class="card">
+    <h2>OpenAI-compatible TTS</h2>
+    <button onclick="doOpenAISpeech()">/v1/audio/speech</button>
+    <audio id="oaAudio" controls></audio>
+  </div>
+
+<script>
+async function doTTS(){
+  const text = document.getElementById('ttsText').value;
+  const voice = document.getElementById('voice').value || null;
+  const speed = parseFloat(document.getElementById('speed').value || '1.0');
+  const res = await fetch('/api/tts', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text, voice, speed})});
+  const blob = await res.blob();
+  document.getElementById('ttsAudio').src = URL.createObjectURL(blob);
+}
+
+const sttForm = document.getElementById('sttForm');
+sttForm.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const f = document.getElementById('sttFile').files[0];
+  const fd = new FormData();
+  fd.append('file', f);
+  const res = await fetch('/api/stt', {method:'POST', body: fd});
+  const j = await res.json();
+  document.getElementById('sttOut').textContent = JSON.stringify(j, null, 2);
+});
+
+async function doOpenAISpeech(){
+  const text = document.getElementById('ttsText').value;
+  const res = await fetch('/v1/audio/speech', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({model:'kittentts-0.1', voice:'female_1', input:text, response_format:'wav'})});
+  const blob = await res.blob();
+  document.getElementById('oaAudio').src = URL.createObjectURL(blob);
+}
+</script>
+</body>
+</html>

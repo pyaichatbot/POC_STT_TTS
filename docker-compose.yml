@@ -1,0 +1,24 @@
+
+version: '3.9'
+services:
+  ai-poc:
+    build:
+      context: .
+      # args:
+      #   HTTP_PROXY: http://proxy.corp:8080
+      #   HTTPS_PROXY: http://proxy.corp:8080
+    image: local/ai-poc:latest
+    environment:
+      - WHISPER_MODEL_DIR=/srv/models/whisper-small
+      - HF_HOME=/srv/.cache/huggingface
+      - HF_HUB_DISABLE_TELEMETRY=1
+      # - HTTP_PROXY=http://proxy.corp:8080
+      # - HTTPS_PROXY=http://proxy.corp:8080
+    ports:
+      - "8080:8080"
+  # To use the model weights from the host, uncomment the following line:
+  # volumes:
+  #   - ./models/whisper-small:/srv/models/whisper-small:ro
+  #   - ./models/kittentts:/srv/models/kittentts:ro
+  # If you want to use the weights copied into the image, comment out the above.
+    restart: unless-stopped
